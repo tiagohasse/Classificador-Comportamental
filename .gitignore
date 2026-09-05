@@ -1,0 +1,21 @@
+# Ambientes virtuais Python
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Byte-code e cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
