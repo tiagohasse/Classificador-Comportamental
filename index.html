@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Classificador de Personalidade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-base: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-border: rgba(255, 255, 255, 0.08);
+            --bg-input: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            
+            --introvert-base: #38bdf8;
+            --introvert-bg: rgba(56, 189, 248, 0.12);
+            --introvert-border: rgba(56, 189, 248, 0.35);
+
+            --extrovert-base: #34d399;
+            --extrovert-bg: rgba(52, 211, 153, 0.12);
+            --extrovert-border: rgba(52, 211, 153, 0.35);
+
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --border-radius-sm: 6px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 40px 20px 80px;
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(52, 211, 153, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-projeto {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--bg-card-border);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        .subtitulo {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 28px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .secao-titulo {
+            margin: 20px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--bg-card-border);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+        }
+
+        .secao-titulo:first-of-type {
+            margin-top: 0;
+        }
+
+        .grid-campos {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-campo {
+            background: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--border-radius-md);
+            padding: 14px 16px;
+        }
+
+        .item-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .item-info label,
+        .item-info .label-texto {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .item-info .descricao {
+            display: block;
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .valor-tag {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 3px 8px;
+            border-radius: var(--border-radius-sm);
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: none;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .switch-segmentado {
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 2px;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .switch-segmentado input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-segmentado label {
+            padding: 5px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .switch-segmentado input[type="radio"]:checked + label {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        .btn-analisar {
+            margin-top: 22px;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            background: #3b82f6;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-analisar:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .btn-analisar:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .resultado-card {
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--bg-card-border);
+            background: var(--bg-card);
+        }
+
+        .resultado-card[hidden],
+        .alerta-erro[hidden],
+        [hidden] {
+            display: none !important;
+        }
+
+        .resultado-card.introvert {
+            background: var(--introvert-bg);
+            border-color: var(--introvert-border);
+        }
+
+        .resultado-card.extrovert {
+            background: var(--extrovert-bg);
+            border-color: var(--extrovert-border);
+        }
+
+        .resultado-rotulo {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .resultado-valor {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .resultado-card.introvert .resultado-valor {
+            color: var(--introvert-base);
+        }
+
+        .resultado-card.extrovert .resultado-valor {
+            color: var(--extrovert-base);
+        }
+
+        .resultado-descricao {
+            margin: 8px 0 0;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .alerta-erro {
+            padding: 14px;
+            border-radius: var(--border-radius-md);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            font-size: 0.88rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <span class="tag-projeto">Classificador por Machine Learning</span>
+            <h1>Classificador Comportamental</h1>
+            <p class="subtitulo">Preencha as características para classificar a pessoa como <strong>Introvertida</strong> ou <strong>Extrovertida</strong>.</p>
+        </header>
+
+        <main class="card">
+            <form id="formClassificador">
+                <div class="secao-titulo">Hábitos e Rotina</div>
+                <div class="grid-campos">
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <label for="timeSpentAlone">Tempo sozinho</label>
+                                <span class="descricao">Horas por dia que passa sozinho(a)</span>
+                            </div>
+                            <span class="valor-tag" id="tagTimeAlone">4.0 h/dia</span>
+                        </div>
+                        <input type="range" id="timeSpentAlone" min="0" max="16" step="0.5" value="4.0" />
+                    </div>
+
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <label for="goingOutside">Saídas de casa</label>
+                                <span class="descricao">Dias por semana em que sai para passeios ou lazer</span>
+                            </div>
+                            <span class="valor-tag" id="tagGoingOutside">3 dias/sem</span>
+                        </div>
+                        <input type="range" id="goingOutside" min="0" max="7" step="1" value="3" />
+                    </div>
+
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <label for="postFrequency">Postagens em redes sociais</label>
+                                <span class="descricao">Frequência de postagens públicas</span>
+                            </div>
+                            <span class="valor-tag" id="tagPostFrequency">Nível 3 / 10</span>
+                        </div>
+                        <input type="range" id="postFrequency" min="0" max="10" step="1" value="3" />
+                    </div>
+                </div>
+
+                <div class="secao-titulo">Socialização e Reação</div>
+                <div class="grid-campos">
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <label for="socialEventAttendance">Eventos sociais</label>
+                                <span class="descricao">Frequência em festas e reuniões com grupos</span>
+                            </div>
+                            <span class="valor-tag" id="tagSocialEvents">Nível 4 / 10</span>
+                        </div>
+                        <input type="range" id="socialEventAttendance" min="0" max="10" step="1" value="4" />
+                    </div>
+
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <label for="friendsCircleSize">Círculo de amigos</label>
+                                <span class="descricao">Quantidade de amigos próximos</span>
+                            </div>
+                            <span class="valor-tag" id="tagFriendsSize">6 amigos</span>
+                        </div>
+                        <input type="range" id="friendsCircleSize" min="0" max="25" step="1" value="6" />
+                    </div>
+
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <span class="label-texto">Medo de palco ou de falar em público</span>
+                                <span class="descricao">Sente desconforto ou receio de falar diante de grupos?</span>
+                            </div>
+                            <div class="switch-segmentado">
+                                <input type="radio" name="stageFear" id="stageFearNao" value="0" checked />
+                                <label for="stageFearNao">Não</label>
+                                <input type="radio" name="stageFear" id="stageFearSim" value="1" />
+                                <label for="stageFearSim">Sim</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="item-campo">
+                        <div class="item-topo">
+                            <div class="item-info">
+                                <span class="label-texto">Drenado(a) após socializar</span>
+                                <span class="descricao">Sente-se sem energia após passar tempo com muitas pessoas?</span>
+                            </div>
+                            <div class="switch-segmentado">
+                                <input type="radio" name="drained" id="drainedNao" value="0" checked />
+                                <label for="drainedNao">Não</label>
+                                <input type="radio" name="drained" id="drainedSim" value="1" />
+                                <label for="drainedSim">Sim</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-analisar" id="btnSubmit">Classificar</button>
+            </form>
+        </main>
+
+        <section class="resultado-card" id="resultadoCard" hidden>
+            <div class="resultado-rotulo">Resultado da Classificação</div>
+            <p class="resultado-valor" id="resultadoValor">-</p>
+            <p class="resultado-descricao" id="resultadoDescricao">-</p>
+        </section>
+
+        <div class="alerta-erro" id="alertaErro" hidden>
+            <span id="mensagemErro">Não foi possível conectar ao servidor.</span>
+        </div>
+    </div>
+
+    <script>
+        const timeAloneInput = document.getElementById("timeSpentAlone");
+        const tagTimeAlone = document.getElementById("tagTimeAlone");
+        timeAloneInput.addEventListener("input", (e) => {
+            tagTimeAlone.textContent = `${parseFloat(e.target.value).toFixed(1)} h/dia`;
+        });
+
+        const goingOutsideInput = document.getElementById("goingOutside");
+        const tagGoingOutside = document.getElementById("tagGoingOutside");
+        goingOutsideInput.addEventListener("input", (e) => {
+            tagGoingOutside.textContent = `${e.target.value} ${e.target.value == 1 ? 'dia/sem' : 'dias/sem'}`;
+        });
+
+        const postFreqInput = document.getElementById("postFrequency");
+        const tagPostFrequency = document.getElementById("tagPostFrequency");
+        postFreqInput.addEventListener("input", (e) => {
+            tagPostFrequency.textContent = `Nível ${e.target.value} / 10`;
+        });
+
+        const socialEventsInput = document.getElementById("socialEventAttendance");
+        const tagSocialEvents = document.getElementById("tagSocialEvents");
+        socialEventsInput.addEventListener("input", (e) => {
+            tagSocialEvents.textContent = `Nível ${e.target.value} / 10`;
+        });
+
+        const friendsInput = document.getElementById("friendsCircleSize");
+        const tagFriendsSize = document.getElementById("tagFriendsSize");
+        friendsInput.addEventListener("input", (e) => {
+            tagFriendsSize.textContent = `${e.target.value} ${e.target.value == 1 ? 'amigo' : 'amigos'}`;
+        });
+
+        const form = document.getElementById("formClassificador");
+        const btnSubmit = document.getElementById("btnSubmit");
+        const resultadoCard = document.getElementById("resultadoCard");
+        const resultadoValor = document.getElementById("resultadoValor");
+        const resultadoDescricao = document.getElementById("resultadoDescricao");
+        const alertaErro = document.getElementById("alertaErro");
+        const mensagemErro = document.getElementById("mensagemErro");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            alertaErro.hidden = true;
+
+            const payload = {
+                time_spent_alone: parseFloat(timeAloneInput.value),
+                stage_fear: parseInt(document.querySelector('input[name="stageFear"]:checked').value, 10),
+                social_event_attendance: parseFloat(socialEventsInput.value),
+                going_outside: parseFloat(goingOutsideInput.value),
+                drained_after_socializing: parseInt(document.querySelector('input[name="drained"]:checked').value, 10),
+                friends_circle_size: parseFloat(friendsInput.value),
+                post_frequency: parseFloat(postFreqInput.value)
+            };
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "Classificando...";
+
+            try {
+                const endpoint = window.location.origin.includes(":8000") 
+                    ? "/api/v1/predict-personality"
+                    : "http://localhost:8000/api/v1/predict-personality";
+
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro na API (${response.status})`);
+                }
+
+                const data = await response.json();
+                
+                const isExtrovert = /extrovert/i.test(data.personality);
+                resultadoCard.classList.remove("introvert", "extrovert");
+
+                if (isExtrovert) {
+                    resultadoCard.classList.add("extrovert");
+                    resultadoValor.textContent = "Extrovertido";
+                    resultadoDescricao.textContent = "O modelo classificou a pessoa com perfil Extrovertido com base nos hábitos informados.";
+                } else {
+                    resultadoCard.classList.add("introvert");
+                    resultadoValor.textContent = "Introvertido";
+                    resultadoDescricao.textContent = "O modelo classificou a pessoa com perfil Introvertido com base nos hábitos informados.";
+                }
+
+                resultadoCard.hidden = false;
+                resultadoCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            } catch (err) {
+                alertaErro.hidden = false;
+                mensagemErro.textContent = "Não foi possível conectar ao servidor. Verifique se a API está rodando.";
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Classificar";
+            }
+        });
+    </script>
+</body>
+
+</html>
