@@ -35,13 +35,13 @@ São utilizadas 7 características como variáveis independentes:
 * **Usuários Finais:** Para fins de autoconhecimento de forma rápida e simples.
 
 ### 6. O que a aplicação fará com a classificação produzida pelo modelo?
-A aplicação processa as 7 entradas através do modelo treinado (`personality_model.pkl`) e exibe a decisão binária direta (**Extrovertido** ou **Introvertido**), informando ao usuário o resultado da classificação.
+A aplicação processa as 7 entradas através do modelo treinado (`personality_model.pkl`), identifica a classe (**Extrovertido** ou **Introvertido**) e calcula as **porcentagens de probabilidade** para cada perfil comportamental, informando ao usuário o resultado e o nível de certeza.
 
 ### 7. Como seria a interface ou experiência de uso dessa solução?
-A interface ([`index.html`](index.html)) é uma página web simples e direta:
-* Apresenta campos e controles para cada uma das 7 características de entrada.
-* Possui um botão "Classificar" que dispara a requisição para a API.
-* Exibe na tela o cartão de resultado com a classificação final em destaque: **Extrovertido** ou **Introvertido**.
+A interface ([`index.html`](index.html)) utiliza controles interativos de incremento e decremento (*steppers* com botões `+` e `−`) e seletores binários:
+* Permite ajuste fino e específico de cada métrica (como 4.5 horas, 6 amigos ou 3 dias), sem a necessidade de sliders ou digitação manual de números. Suporta clique simples ou pressão contínua para alteração rápida.
+* Possui um botão "Classificar Personalidade" que envia os dados formatados para a API.
+* Exibe na tela o cartão de resultado com a classificação final em destaque (**Extrovertido** ou **Introvertido**), uma barra visual comparativa e as porcentagens exatas de probabilidade.
 
 ---
 
@@ -143,6 +143,9 @@ uvicorn app:app --reload
 * **Resposta de Sucesso (JSON):**
   ```json
   {
-    "personality": "Extrovertido"
+    "personality": "Extrovertido",
+    "probability_extrovert": 71.0,
+    "probability_introvert": 29.0,
+    "confidence": 71.0
   }
   ```

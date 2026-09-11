@@ -4,11 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import joblib
+import numpy as np
 import pandas as pd
 
 app = FastAPI(
     title="Classificador Comportamental",
-    description="Microsserviço de classificação de personalidade (Extrovertido vs. Introvertido)",
+    description="Microsserviço de classificação de personalidade com estimativa de probabilidades",
     version="1.0.0"
 )
 
@@ -38,7 +39,10 @@ class PersonalityInputData(BaseModel):
 
 
 class PersonalityPredictionResponse(BaseModel):
-    personality: str = Field(..., description="Classificação binária: 'Extrovertido' ou 'Introvertido'")
+    personality: str = Field(..., description="Classificação: 'Extrovertido' ou 'Introvertido'")
+    probability_extrovert: float = Field(..., description="Probabilidade estimada de extroversão em % (0 a 100)")
+    probability_introvert: float = Field(..., description="Probabilidade estimada de introversão em % (0 a 100)")
+    confidence: float = Field(..., description="Grau de certeza da classe prevista em % (0 a 100)")
 
 
 @app.get("/", response_class=FileResponse)
@@ -62,10 +66,29 @@ def predict_personality(data: PersonalityInputData):
     }])
 
     try:
-        prediction = int(model.predict(features)[0])
-        personality = "Extrovertido" if prediction == 1 else "Introvertido"
+        if hasattr(model, "predict_proba"):
+            probs = model.predict_proba(features)[0]
+            prob_extro = float(probs[1])
+            prob_intro = float(probs[0])
+        elif hasattr(model, "decision_function"):
+            score = float(model.decision_function(features)[0])
+            prob_extro = float(1.0 / (1.0 + np.exp(-score)))
+            prob_intro = float(1.0 - prob_extro)
+        else:
+            pred = int(model.predict(features)[0])
+            prob_extro = 1.0 if pred == 1 else 0.0
+            prob_intro = 1.0 - prob_extro
 
-        return PersonalityPredictionResponse(personality=personality)
+        is_extrovert = prob_extro >= 0.50
+        personality = "Extrovertido" if is_extrovert else "Introvertido"
+        confidence = prob_extro if is_extrovert else prob_intro
+
+        return PersonalityPredictionResponse(
+            personality=personality,
+            probability_extrovert=round(prob_extro * 100, 1),
+            probability_introvert=round(prob_intro * 100, 1),
+            confidence=round(confidence * 100, 1)
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na inferência do modelo: {str(e)}")
 
